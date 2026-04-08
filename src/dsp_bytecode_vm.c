@@ -116,6 +116,5 @@ float dsp_bytecode_vm_play(
         }
     }
     
-    // clip for safety
-   return dsp_hard_clip(self->stack[--self->stack_ptr], 1.0f);  
+   return self->stack[--self->stack_ptr]; 
 }
