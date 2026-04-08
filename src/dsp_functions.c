@@ -16,7 +16,7 @@ static float clamp_highest(const float a, const float b){
 float dsp_hard_clip(const float input, const float threshold) {
     return (input >= 0) 
         ? clamp_lowest(input, threshold)
-        : clamp_highest(input, threshold);
+        : clamp_highest(input, -threshold);
 }
 
 float dsp_gain(const float input, const float gain){
