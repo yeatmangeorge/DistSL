@@ -7,7 +7,6 @@ C_WARNINGS := \
 	-Werror \
 	-Wshadow \
 	-Wconversion \
-	-Wdouble-promotion \
 	-Wformat=2 \
 	-Wundef \
 	-Wnull-dereference \
@@ -16,7 +15,7 @@ C_FLAGS := -std=$(C_STANDARD) $(C_WARNINGS)
 BUILD_DIR := .build
 SRC_DIR := src
 C_SRCS := $(shell find $(SRC_DIR) -name '*.c')
-ENTRY_POINT := $(SRC_DIR)/dsp.c
+ENTRY_POINT := $(SRC_DIR)/main.c
 BUILD_TARGET := $(BUILD_DIR)/dsp
 
 .PHONY: all build
