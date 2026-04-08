@@ -5,6 +5,7 @@
 
 #define STACK_SIZE UINT8_MAX 
 #define INSTRUCTION_SIZE UINT8_MAX 
+#define MEMORY_SIZE UINT8_MAX
 
 typedef enum DspBytecode{
   BYTECODE_HALT,
@@ -34,12 +35,16 @@ typedef struct DspBytecodeInstruction{
 typedef struct DspBytecodeVM{
     float stack[STACK_SIZE];
     uint8_t stack_ptr; 
+    DspBytecodeInstruction program[INSTRUCTION_SIZE];
+    uint8_t program_ptr;
+    float memory[MEMORY_SIZE];
 }DspBytecodeVM;
+
+void dsp_bytecode_vm_init(DspBytecodeVM *self, const DspBytecodeInstruction program[INSTRUCTION_SIZE]);
 
 float dsp_bytecode_vm_play(
     DspBytecodeVM *self,
-    const float input_sample, 
-    const DspBytecodeInstruction program[INSTRUCTION_SIZE] 
+    const float input_sample 
 );
 
 DspBytecodeInstruction dsp_bytecode_instruction_push(float value);

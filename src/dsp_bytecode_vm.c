@@ -1,11 +1,7 @@
 #include "dsp_bytecode_vm.h"
 #include "dsp_functions.h"
 #include <stdint.h>
-
-static void dsp_bytecode_vm_reset_stack(DspBytecodeVM *self){
-   memset(self->stack, 0.0f, sizeof(float) * STACK_SIZE);
-   self->stack_ptr = 0;
-}
+#include <string.h>
 
 DspBytecodeInstruction dsp_bytecode_instruction_push(float value){
     return (DspBytecodeInstruction){.code = BYTECODE_PUSH, .data = {.push = {value}}};
@@ -99,18 +95,24 @@ static InstructionHandler instruction_handler_jump_table[] = {
   instruction_handler_gain,
   };
 
+void dsp_bytecode_vm_init(DspBytecodeVM *self, const DspBytecodeInstruction program[INSTRUCTION_SIZE]){
+    memset(self->stack, 0.0f, sizeof(self->stack));
+    self->stack_ptr = 0;
+    memcpy(self->program, program, sizeof(self->program));
+    self->program_ptr = 0; 
+    memset(self->memory, 0.0f, sizeof(self->memory));
+}
+
 float dsp_bytecode_vm_play(
     DspBytecodeVM *self,
-    const float input_sample, 
-    const DspBytecodeInstruction program[INSTRUCTION_SIZE] 
+    const float input_sample
 ){
-    dsp_bytecode_vm_reset_stack(self);
     //We need to artificially push the input_sample onto the vm stack so it can be worked on
    DspBytecodeInstruction push_input_sample_instruction = dsp_bytecode_instruction_push(input_sample);
    instruction_handler_jump_table[push_input_sample_instruction.code](self, push_input_sample_instruction);
     
-    for(uint8_t instruction_ptr = 0; instruction_ptr < INSTRUCTION_SIZE; instruction_ptr++){
-        DspBytecodeInstruction current_instruction = program[instruction_ptr];
+    for(self->program_ptr = 0; self->program_ptr < INSTRUCTION_SIZE; self->program_ptr++){
+        DspBytecodeInstruction current_instruction = self->program[self->program_ptr];
         if(instruction_handler_jump_table[current_instruction.code](self, current_instruction) == VM_CONTINUATION_STOP){
             break;
         }
