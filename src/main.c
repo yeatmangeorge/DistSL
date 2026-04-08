@@ -1,3 +1,5 @@
+#include "dsp_functions.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,7 +13,7 @@ int main(int argc, char *argv[]){
        ERR("Invalid args");
    } 
    float input = (float)atof(argv[1]);
-   float output = input * 2;
+   float output = dsp_hard_clip(input, 0.8f);
    fprintf(stdout, "%f\n", (float)output);
    return 0; 
 }

@@ -23,7 +23,7 @@ BUILD_TARGET := $(BUILD_DIR)/dsp
 all: gen-folder build
 
 build:
-	$(CC) $(C_FLAGS) -o $(BUILD_TARGET) $(ENTRY_POINT)
+	$(CC) $(C_FLAGS) -o $(BUILD_TARGET) $(C_SRCS)
 gen-folder:
 	mkdir -p $(BUILD_DIR)
 
