@@ -1,4 +1,5 @@
 #include "dsp_bytecode_vm.h"
+#include "dsp_functions.h"
 #include <stdint.h>
 
 static void dsp_bytecode_vm_reset_stack(DspBytecodeVM *self){
@@ -18,6 +19,19 @@ DspBytecodeInstruction dsp_bytecode_instruction_halt(void){
     return (DspBytecodeInstruction){.code = BYTECODE_HALT, .data = {.none = 0}};
 }
 
+DspBytecodeInstruction dsp_bytecode_instruction_hardclip(float threshold){
+    return (DspBytecodeInstruction){.code = BYTECODE_HARDCLIP, .data = {.hard_clip.threshold = threshold}};
+}
+
+DspBytecodeInstruction dsp_bytecode_instruction_softclip(void){
+    return (DspBytecodeInstruction){.code = BYTECODE_SOFTCLIP, .data = {.none = 0}};
+}
+
+DspBytecodeInstruction dsp_bytecode_instruction_gain(float gain){
+    return (DspBytecodeInstruction){.code = BYTECODE_GAIN, .data = {.gain.gain = gain}};
+}
+
+
 typedef enum VmContinuation{
     VM_CONTINUATION_STOP,
     VM_CONTINUATION_CONT
@@ -25,11 +39,14 @@ typedef enum VmContinuation{
 
 typedef VmContinuation (*InstructionHandler)(DspBytecodeVM *vm, DspBytecodeInstruction instruction);
 
+#define PUSH(VALUE) vm->stack[vm->stack_ptr++] = VALUE
+#define POP() vm->stack[--vm->stack_ptr]
+
 VmContinuation instruction_handler_push(DspBytecodeVM *vm, DspBytecodeInstruction instruction){
     if(vm->stack_ptr == STACK_SIZE){
         return VM_CONTINUATION_STOP;
     }
-    vm->stack[++vm->stack_ptr] = instruction.data.push.value;
+    PUSH( instruction.data.push.value);
     return VM_CONTINUATION_CONT;
 }
 
@@ -42,6 +59,31 @@ VmContinuation instruction_handler_pop(DspBytecodeVM *vm, DspBytecodeInstruction
    return VM_CONTINUATION_CONT;
 }
 
+VmContinuation instruction_handler_hardclip(DspBytecodeVM *vm, DspBytecodeInstruction instruction){
+    if(vm->stack_ptr <= 0){
+       return VM_CONTINUATION_STOP; 
+    } 
+    PUSH(dsp_hard_clip(POP(), instruction.data.hard_clip.threshold));
+    return VM_CONTINUATION_CONT;
+}
+
+VmContinuation instruction_handler_softclip(DspBytecodeVM *vm, DspBytecodeInstruction instruction){
+    (void) instruction;
+    if(vm->stack_ptr<=0){
+        return VM_CONTINUATION_STOP;
+    }
+    PUSH(dsp_soft_clip(POP()));
+    return VM_CONTINUATION_CONT;
+}
+
+VmContinuation instruction_handler_gain(DspBytecodeVM *vm, DspBytecodeInstruction instruction){
+    if(vm->stack_ptr<=0){
+        return VM_CONTINUATION_STOP;
+    }
+    PUSH(dsp_gain(POP(), instruction.data.gain.gain));
+    return VM_CONTINUATION_CONT;
+}
+
 VmContinuation instruction_handler_halt(DspBytecodeVM *vm, DspBytecodeInstruction instruction){
     (void) vm;
     (void) instruction;
@@ -49,24 +91,13 @@ VmContinuation instruction_handler_halt(DspBytecodeVM *vm, DspBytecodeInstructio
 }
 
 static InstructionHandler instruction_handler_jump_table[] = {
-   instruction_handler_push,
-   instruction_handler_pop,
   instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  instruction_handler_halt,
-  
-};
+  instruction_handler_push,
+  instruction_handler_pop,
+  instruction_handler_hardclip,
+  instruction_handler_softclip,
+  instruction_handler_gain,
+  };
 
 float dsp_bytecode_vm_play(
     DspBytecodeVM *self,
@@ -85,5 +116,5 @@ float dsp_bytecode_vm_play(
         }
     }
     
-   return self->stack[self->stack_ptr]; 
+   return self->stack[--self->stack_ptr]; 
 }

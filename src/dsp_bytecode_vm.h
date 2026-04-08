@@ -7,12 +7,12 @@
 #define INSTRUCTION_SIZE UINT8_MAX 
 
 typedef enum DspBytecode{
+  BYTECODE_HALT,
   BYTECODE_PUSH,
   BYTECODE_POP,
   BYTECODE_HARDCLIP,
   BYTECODE_SOFTCLIP,
   BYTECODE_GAIN,
-  BYTECODE_HALT
 } DspBytecode;
 
 /**
@@ -45,3 +45,6 @@ float dsp_bytecode_vm_play(
 DspBytecodeInstruction dsp_bytecode_instruction_push(float value);
 DspBytecodeInstruction dsp_bytecode_instruction_pop(void);
 DspBytecodeInstruction dsp_bytecode_instruction_halt(void);
+DspBytecodeInstruction dsp_bytecode_instruction_hardclip(float threshold);
+DspBytecodeInstruction dsp_bytecode_instruction_softclip(void);
+DspBytecodeInstruction dsp_bytecode_instruction_gain(float gain);

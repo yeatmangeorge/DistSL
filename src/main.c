@@ -1,4 +1,4 @@
-#include "dsp_functions.h"
+#include "dsp_bytecode_vm.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +13,15 @@ int main(int argc, char *argv[]){
        ERR("Invalid args");
    } 
    float input = (float)atof(argv[1]);
-   float output = dsp_hard_clip(input, 0.8f);
+   
+   DspBytecodeVM vm;
+   const DspBytecodeInstruction program[INSTRUCTION_SIZE] = {
+       dsp_bytecode_instruction_gain(0.5f),
+       dsp_bytecode_instruction_hardclip(0.25f),
+       dsp_bytecode_instruction_halt()
+   };
+   float output = dsp_bytecode_vm_play(&vm, input, program);
+   
    fprintf(stdout, "%f\n", (float)output);
    return 0; 
 }

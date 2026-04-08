@@ -1,5 +1,6 @@
 CC := clang
 C_STANDARD := c11
+C_DEBUG_FLAGS := -g -O0
 C_WARNINGS := \
 	-Wall \
 	-Wextra \
@@ -11,7 +12,7 @@ C_WARNINGS := \
 	-Wundef \
 	-Wnull-dereference \
 	-Wimplicit-fallthrough
-C_FLAGS := -std=$(C_STANDARD) $(C_WARNINGS) 
+C_FLAGS := -std=$(C_STANDARD) $(C_WARNINGS) $(C_DEBUG_FLAGS)
 BUILD_DIR := .build
 SRC_DIR := src
 C_SRCS := $(shell find $(SRC_DIR) -name '*.c')
