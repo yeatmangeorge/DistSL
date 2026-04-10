@@ -32,6 +32,14 @@ DspBytecodeInstruction dsp_bytecode_instruction_set(VmRegister dst, float value)
    return (DspBytecodeInstruction){.code = BYTECODE_SET, .data.set = {.dst = dst, .value = value}};
 }
 
+DspBytecodeInstruction dsp_bytecode_instruction_low_pass_filter(size_t dst, size_t src, size_t filter_memory_addr, float cutoff){
+    return (DspBytecodeInstruction){.code = BYTECODE_LOW_PASS_FILTER, .data.low_pass_filter = {.dst = dst, .src = src, .filter_memory_addr = filter_memory_addr, .cutoff = cutoff}};
+}
+
+DspBytecodeInstruction dsp_bytecode_instruction_high_pass_filter(size_t dst, size_t src, size_t filter_memory_addr, float cutoff){
+    return (DspBytecodeInstruction){.code = BYTECODE_HIGH_PASS_FILTER, .data.high_pass_filter = {.dst = dst, .src = src, .filter_memory_addr = filter_memory_addr, .cutoff = cutoff}};
+}
+
 typedef enum VmContinuation{
     VM_CONTINUATION_STOP,
     VM_CONTINUATION_CONT
@@ -108,6 +116,26 @@ VmContinuation instruction_handler_set(DspBytecodeVM *vm, DspBytecodeInstruction
     return VM_CONTINUATION_CONT;
 }
 
+VmContinuation instruction_handler_low_pass_filter(DspBytecodeVM *vm, DspBytecodeInstruction instruction){
+    vm->rf[instruction.data.low_pass_filter.dst] = 
+        dsp_low_pass_filter(
+            vm->rf[instruction.data.low_pass_filter.src],
+            vm->memory[instruction.data.low_pass_filter.filter_memory_addr],
+            instruction.data.low_pass_filter.cutoff 
+        );
+    return VM_CONTINUATION_CONT;
+}
+
+VmContinuation instruction_handler_high_pass_filter (DspBytecodeVM *vm, DspBytecodeInstruction instruction){
+    vm->rf[instruction.data.high_pass_filter.dst] = 
+        dsp_high_pass_filter(
+            vm->rf[instruction.data.high_pass_filter.src],
+            vm->memory[instruction.data.high_pass_filter.filter_memory_addr],
+            instruction.data.high_pass_filter.cutoff 
+        );
+    return VM_CONTINUATION_CONT;
+}
+
 static InstructionHandler instruction_handler_jump_table[] = {
   instruction_handler_halt,
   instruction_handler_hardclip,
@@ -115,7 +143,9 @@ static InstructionHandler instruction_handler_jump_table[] = {
   instruction_handler_gain,
   instruction_handler_load,
   instruction_handler_save,
-  instruction_handler_set
+  instruction_handler_set,
+  instruction_handler_low_pass_filter,
+  instruction_handler_high_pass_filter
   };
 
 void dsp_bytecode_vm_init(DspBytecodeVM *self, const DspBytecodeInstruction program[INSTRUCTION_SIZE]){

@@ -15,7 +15,9 @@ typedef enum DspBytecode{
   BYTECODE_GAIN,
   BYTECODE_LOAD,
   BYTECODE_SAVE,
-  BYTECODE_SET
+  BYTECODE_SET,
+  BYTECODE_LOW_PASS_FILTER,
+  BYTECODE_HIGH_PASS_FILTER
 } DspBytecode;
 
 typedef enum VmRegisterBank{
@@ -36,6 +38,11 @@ typedef union DspBytecodeInstructionData{
     struct{size_t memory_addr; VmRegister dst;}save;
     //TODO float is a hack as all types are 32bit
     struct{VmRegister dst; float value;}set;
+    /**
+     * filter_memory_addr refers is read and updated when this code is run
+     */
+    struct{size_t dst; size_t src; size_t filter_memory_addr; float cutoff;} low_pass_filter;
+    struct{size_t dst; size_t src; size_t filter_memory_addr; float cutoff;} high_pass_filter;
     struct{char _;} none;
 } DspBytecodeInstructionData;
 
@@ -67,3 +74,6 @@ DspBytecodeInstruction dsp_bytecode_instruction_gain( size_t dst,size_t src, flo
 DspBytecodeInstruction dsp_bytecode_instruction_load(VmRegister dst, size_t memory_addr);
 DspBytecodeInstruction dsp_bytecode_instruction_save(size_t memory_addr, VmRegister dst);
 DspBytecodeInstruction dsp_bytecode_instruction_set(VmRegister dst, float value);
+DspBytecodeInstruction dsp_bytecode_instruction_low_pass_filter(size_t dst, size_t src, size_t filter_memory_addr, float cutoff);
+DspBytecodeInstruction dsp_bytecode_instruction_high_filter(size_t dst, size_t src, size_t filter_memory_addr, float cutoff);
+
