@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -13,6 +14,7 @@ typedef enum DspBytecode{
   BYTECODE_SOFTCLIP,
   BYTECODE_GAIN,
   BYTECODE_LOAD,
+  BYTECODE_SAVE,
   BYTECODE_SET
 } DspBytecode;
 
@@ -31,6 +33,7 @@ typedef union DspBytecodeInstructionData{
     struct{size_t dst; size_t src;} soft_clip;
     struct{size_t dst; size_t src; float gain;} gain;
     struct{VmRegister dst; size_t memory_addr;}load;
+    struct{size_t memory_addr; VmRegister dst;}save;
     //TODO float is a hack as all types are 32bit
     struct{VmRegister dst; float value;}set;
     struct{char _;} none;
@@ -62,4 +65,5 @@ DspBytecodeInstruction dsp_bytecode_instruction_hardclip( size_t dst,size_t src,
 DspBytecodeInstruction dsp_bytecode_instruction_softclip( size_t dst,size_t src);
 DspBytecodeInstruction dsp_bytecode_instruction_gain( size_t dst,size_t src, float gain);
 DspBytecodeInstruction dsp_bytecode_instruction_load(VmRegister dst, size_t memory_addr);
+DspBytecodeInstruction dsp_bytecode_instruction_save(size_t memory_addr, VmRegister dst);
 DspBytecodeInstruction dsp_bytecode_instruction_set(VmRegister dst, float value);

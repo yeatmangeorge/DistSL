@@ -1,5 +1,6 @@
 #include "dsp_bytecode_vm.h"
 #include "dsp_functions.h"
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -21,6 +22,10 @@ DspBytecodeInstruction dsp_bytecode_instruction_gain( size_t dst, size_t src, fl
 
 DspBytecodeInstruction dsp_bytecode_instruction_load(VmRegister dst, size_t memory_addr){
     return (DspBytecodeInstruction){.code = BYTECODE_LOAD, .data = {.load = {.dst = dst, .memory_addr = memory_addr}}};
+}
+
+DspBytecodeInstruction dsp_bytecode_instruction_save(size_t memory_addr, VmRegister dst){
+    return (DspBytecodeInstruction){.code = BYTECODE_SAVE, .data = {.save = {.memory_addr = memory_addr, .dst = dst}}};
 }
 
 DspBytecodeInstruction dsp_bytecode_instruction_set(VmRegister dst, float value){
@@ -79,6 +84,18 @@ VmContinuation instruction_handler_load(DspBytecodeVM *vm, DspBytecodeInstructio
     return VM_CONTINUATION_CONT;
 }
 
+VmContinuation instruction_handler_save(DspBytecodeVM *vm, DspBytecodeInstruction instruction){
+    switch (instruction.data.save.dst.bank) {
+        case RF:
+        vm->memory[instruction.data.save.memory_addr] = vm->rf[instruction.data.save.memory_addr];
+        break;
+        case RUI:
+        vm->memory[instruction.data.save.memory_addr] = (float)vm->rui[instruction.data.save.memory_addr];
+        break;
+    }
+    return VM_CONTINUATION_CONT;
+}
+
 VmContinuation instruction_handler_set(DspBytecodeVM *vm, DspBytecodeInstruction instruction){
     switch(instruction.data.set.dst.bank) {
         case RF:
@@ -97,6 +114,7 @@ static InstructionHandler instruction_handler_jump_table[] = {
   instruction_handler_softclip,
   instruction_handler_gain,
   instruction_handler_load,
+  instruction_handler_save,
   instruction_handler_set
   };
 
