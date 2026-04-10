@@ -28,3 +28,9 @@ float dsp_low_pass_filter(const float input,
                         const float cutoff) {
     return filtered_previous + cutoff * (input-filtered_previous);
 }
+
+float dsp_high_pass_filter(const float input,
+                            const float filtered_previous,
+                            const float cutoff) {
+    return input - (1.0f - cutoff) * filtered_previous;
+}
