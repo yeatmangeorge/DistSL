@@ -13,15 +13,15 @@ int main(int argc, char *argv[]){
        ERR("Invalid args");
    } 
    float input = (float)atof(argv[1]);
-   
    const DspBytecodeInstruction program[INSTRUCTION_SIZE] = {
-       dsp_bytecode_instruction_gain(0.5f),
-       dsp_bytecode_instruction_hardclip(0.25f),
+       dsp_bytecode_instruction_set((VmRegister){.id = 0, .bank = RF}, input),
+       dsp_bytecode_instruction_gain(0, 0, 0.5f),
+       dsp_bytecode_instruction_hardclip(0, 0, 0.25f),
        dsp_bytecode_instruction_halt()
    };
    DspBytecodeVM vm;
    dsp_bytecode_vm_init(&vm, program);
-   float output = dsp_bytecode_vm_play(&vm, input);
+   float output = dsp_bytecode_vm_play(&vm);
    
    fprintf(stdout, "%f\n", (float)output);
    return 0; 

@@ -3,27 +3,36 @@
 #include <stdint.h>
 #include <string.h>
 
-#define STACK_SIZE UINT8_MAX 
+#define REGISTER_SIZE 3 
 #define INSTRUCTION_SIZE UINT8_MAX 
 #define MEMORY_SIZE UINT8_MAX
 
 typedef enum DspBytecode{
   BYTECODE_HALT,
-  BYTECODE_PUSH,
-  BYTECODE_POP,
   BYTECODE_HARDCLIP,
   BYTECODE_SOFTCLIP,
   BYTECODE_GAIN,
+  BYTECODE_LOAD,
+  BYTECODE_SET
 } DspBytecode;
 
-/**
-* This is just to reduce confusion and allow multiparam 
-* bytecodes in the future
-*/
+typedef enum VmRegisterBank{
+    RF,
+    RUI,
+}VmRegisterBank;
+
+typedef struct VmRegister{
+   size_t id; 
+   VmRegisterBank bank;
+}VmRegister;
+
 typedef union DspBytecodeInstructionData{
-    struct{float value;} push;
-    struct{float threshold;} hard_clip;
-    struct{float gain;} gain;
+    struct{size_t dst; size_t src; float threshold;} hard_clip;
+    struct{size_t dst; size_t src;} soft_clip;
+    struct{size_t dst; size_t src; float gain;} gain;
+    struct{VmRegister dst; size_t memory_addr;}load;
+    //TODO float is a hack as all types are 32bit
+    struct{VmRegister dst; float value;}set;
     struct{char _;} none;
 } DspBytecodeInstructionData;
 
@@ -33,23 +42,24 @@ typedef struct DspBytecodeInstruction{
 }DspBytecodeInstruction;
 
 typedef struct DspBytecodeVM{
-    float stack[STACK_SIZE];
-    uint8_t stack_ptr; 
+    float rf[REGISTER_SIZE];
+    uint32_t rui[REGISTER_SIZE]; 
+    size_t stack_ptr; 
     DspBytecodeInstruction program[INSTRUCTION_SIZE];
-    uint8_t program_ptr;
+    size_t program_ptr;
     float memory[MEMORY_SIZE];
 }DspBytecodeVM;
 
 void dsp_bytecode_vm_init(DspBytecodeVM *self, const DspBytecodeInstruction program[INSTRUCTION_SIZE]);
 
 float dsp_bytecode_vm_play(
-    DspBytecodeVM *self,
-    const float input_sample 
+    DspBytecodeVM *self
+    // const float input_sample 
 );
 
-DspBytecodeInstruction dsp_bytecode_instruction_push(float value);
-DspBytecodeInstruction dsp_bytecode_instruction_pop(void);
 DspBytecodeInstruction dsp_bytecode_instruction_halt(void);
-DspBytecodeInstruction dsp_bytecode_instruction_hardclip(float threshold);
-DspBytecodeInstruction dsp_bytecode_instruction_softclip(void);
-DspBytecodeInstruction dsp_bytecode_instruction_gain(float gain);
+DspBytecodeInstruction dsp_bytecode_instruction_hardclip( size_t dst,size_t src, float threshold);
+DspBytecodeInstruction dsp_bytecode_instruction_softclip( size_t dst,size_t src);
+DspBytecodeInstruction dsp_bytecode_instruction_gain( size_t dst,size_t src, float gain);
+DspBytecodeInstruction dsp_bytecode_instruction_load(VmRegister dst, size_t memory_addr);
+DspBytecodeInstruction dsp_bytecode_instruction_set(VmRegister dst, float value);
